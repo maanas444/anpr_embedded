@@ -2,6 +2,11 @@ import cv2
 import numpy as np
 import pytesseract
 from pytesseract import TesseractNotFoundError
+
+# Disable Ultralytics online/telemetry checks
+import os
+os.environ["YOLO_AUTOINSTALL"] = "False"
+os.environ["ULTRALYTICS_AUTOINSTALL"] = "False"
 from ultralytics import YOLO
 
 
