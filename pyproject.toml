@@ -21,8 +21,9 @@ authors = [
 
 
 [project.scripts]
-node   = "node.main:main"
-server = "server.main:main"
+node     = "node.main:main"
+cam-test = "node.camera:test"
+server   = "server.main:main"
 
 
 [tool.hatch.build.targets.wheel]
