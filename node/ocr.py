@@ -46,25 +46,24 @@ def find_plate_by_contours(image_path, output_path='../results/output_contours.j
         print("No rectangular plate detected using traditional contours.")
 
 def find_plate_by_yolo(image_path, output_path='../results/output_yolo.jpg'):
-    # 1. Load the model
-    model = YOLO("node/models/license-plate-finetune-v1n.pt")  # Nano  :  5.47 MB
+    # # 1. Load the model
+    # model = YOLO("node/models/license-plate-finetune-v1n.pt")  # Nano  :  5.47 MB
+    # # results = model(image_path)
 
-    # 2. Export to NCNN format (creates a folder named 'yolov11n_ncnn_model')
-    model.export(format="ncnn", verbose=False)
+    # # 2. Export to NCNN format (creates a folder named 'yolov11n_ncnn_model')
+    # model.export(format="ncnn", verbose=False)
 
-    # Quiet down Ultralytics logger
-    import os
-    os.environ["YOLO_VERBOSE"] = "False"
+    # # # Quiet down Ultralytics logger
+    # # import os
+    # # os.environ["YOLO_VERBOSE"] = "False"
 
-    # Suppress PyTorch/Python deprecation warnings
-    import warnings
-    warnings.filterwarnings("ignore")
+    # # # Suppress PyTorch/Python deprecation warnings
+    # # import warnings
+    # # warnings.filterwarnings("ignore")
 
     # 3. Load the exported model for sub-100ms inference
     ncnn_model = YOLO("node/models/license-plate-finetune-v1n_ncnn_model")
     results = ncnn_model(image_path)
-
-    # results = model(image_path)
     
     # Alternatively, manually save to a specific filename:
     i = 0
