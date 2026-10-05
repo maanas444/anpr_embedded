@@ -2,203 +2,83 @@ import cv2
 import numpy as np
 import pytesseract
 from pytesseract import TesseractNotFoundError
+from ultralytics import YOLO
 
 
+# Multi-license plate reading with ROI
 # 1. Pre-processing
 # 2. Find license plates (rectangles)
 # 3. Crop license plates
-# 4. OCR on plates
+# 4. Align/Rotate/Warp text
+# 5. OCR on plates
 
-def _preprocess_plate(frame):
-    """Clean and enhance a cropped license plate image for OCR."""
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+def find_plate_by_contours(image_path, output_path='output_contours.jpg'):
+    img = cv2.imread(image_path)
+    if img is None:
+        print(f"Error: Could not load image from {image_path}")
+        return
 
-    # 1. Bilateral filter removes noise while keeping edges sharp
-    filtered = cv2.bilateralFilter(gray, 11, 17, 17)
-
-    # 2. Adaptive threshold handles uneven lighting and shadows
-    thresh = cv2.adaptiveThreshold(
-        filtered,
-        255,
-        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-        cv2.THRESH_BINARY,
-        11,
-        2,
-    )
-
-    # TODO: Remove, for debugging
-    combined = cv2.vconcat([
-        frame, 
-        cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR), 
-        cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
-    ])
-    cv2.imwrite("../processing-v2.jpg", combined)
-
-    return thresh  # Return pre-processed frame
-
-def _preprocess_plate2(frame):
-    """Clean, upscale, and pad a cropped license plate image for OCR."""
-    # 1. Upscale image to increase character size for Tesseract
-    height, width = frame.shape[:2]
-    frame_resized = cv2.resize(frame, (width * 3, height * 3), interpolation=cv2.INTER_CUBIC)
-
-    # 2. Convert to grayscale
-    gray = cv2.cvtColor(frame_resized, cv2.COLOR_BGR2GRAY)
-
-    # 3. Denoise with Gaussian Blur instead of Bilateral filter
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-
-    # 4. Use Otsu's thresholding for cleaner separation
-    _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-    # 5. Add a clean white border around the thresholded image
-    # Tesseract struggles when text or black regions touch the exact boundary
-    padded = cv2.copyMakeBorder(
-        thresh,
-        top=15,
-        bottom=15,
-        left=15,
-        right=15,
-        borderType=cv2.BORDER_CONSTANT,
-        value=[255, 255, 255]
-    )
-
-    # TODO: Remove, for debugging
-    # --- DEBUG VISUALIZATION (Fixed dimensions & channels) ---
-    # Convert all images to 3-channel BGR and match the padded width
-    target_width = padded.shape[1]
-    def prep_for_stack(img):
-        if len(img.shape) == 2:
-            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        return cv2.resize(img, (target_width, int(img.shape[0] * (target_width / img.shape[1]))))
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.bilateralFilter(gray, 11, 17, 17)
+    edged = cv2.Canny(blurred, 30, 200)
     
-    combined = cv2.vconcat([
-        prep_for_stack(frame_resized),
-        prep_for_stack(blurred),
-        prep_for_stack(gray),
-        prep_for_stack(thresh),
-        prep_for_stack(padded)
-    ])
-    cv2.imwrite("../processing-v3.jpg", combined)
-
-    return padded
-
-def _preprocess_plate3(frame):
-    """Clean, upscale, and pad a cropped license plate image for OCR."""
-    # 1. Upscale image (Tesseract needs characters ~30-40px high)
-    height, width = frame.shape[:2]
-    frame_resized = cv2.resize(frame, (width * 3, height * 3), interpolation=cv2.INTER_CUBIC)
-
-    # 2. Convert to grayscale & Blur
-    gray = cv2.cvtColor(frame_resized, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-
-    # 3. Otsu Thresholding
-    _, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-    # 4. Remove outer black borders/noise using Morphological Opening
-    # This separates black border lines from the black text characters
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    cleaned = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
-
-    # 5. Pad the image AFTER converting to BGR for uniform dimensions in vconcat
-    padded = cv2.copyMakeBorder(
-        cleaned,
-        top=15,
-        bottom=15,
-        left=15,
-        right=15,
-        borderType=cv2.BORDER_CONSTANT,
-        value=255
-    )
-
-
-    # TODO: Remove, for debugging
-    # --- DEBUG VISUALIZATION (Fixed dimensions & channels) ---
-    # Convert all images to 3-channel BGR and match the padded width
-    target_width = padded.shape[1]
-    def prep_for_stack(img):
-        if len(img.shape) == 2:
-            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        return cv2.resize(img, (target_width, int(img.shape[0] * (target_width / img.shape[1]))))
+    contours, _ = cv2.findContours(edged.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)[:10]
     
-    combined = cv2.vconcat([
-        prep_for_stack(frame_resized),
-        prep_for_stack(gray),
-        prep_for_stack(thresh),
-        prep_for_stack(cleaned),
-        prep_for_stack(padded)
-    ])
-    cv2.imwrite("../processing-v4.jpg", combined)
-
-    return padded
-
-def clean_plate_borders(binary_img):
-    """Removes black borders connected to the image boundaries."""
-    h, w = binary_img.shape[:2]
-    
-    # Invert so background is black (0) and text/borders are white (255)
-    inv = cv2.bitwise_not(binary_img)
-    
-    # Create a mask slightly larger than the image for floodFill
-    mask = np.zeros((h + 2, w + 2), np.uint8)
-    
-    # Flood-fill black from all 4 borders to wipe out edge-connected black borders
-    for x in range(w):
-        if inv[0, x] == 255: cv2.floodFill(inv, mask, (x, 0), 0)
-        if inv[h-1, x] == 255: cv2.floodFill(inv, mask, (x, h-1), 0)
-    for y in range(h):
-        if inv[y, 0] == 255: cv2.floodFill(inv, mask, (0, y), 0)
-        if inv[y, w-1] == 255: cv2.floodFill(inv, mask, (w-1, y), 0)
+    plate_contour = None
+    for c in contours:
+        perimeter = cv2.arcLength(c, True)
+        approx = cv2.approxPolyDP(c, 0.02 * perimeter, True)
         
-    # Invert back to normal black-on-white text
-    cleaned = cv2.bitwise_not(inv)
-    return cleaned
+        if len(approx) == 4:
+            x, y, w, h = cv2.boundingRect(approx)
+            aspect_ratio = float(w) / h
+            if 2.0 <= aspect_ratio <= 5.5:
+                plate_contour = approx
+                break
 
-def _preprocess_plate4(crop):
-    # 1. Resize/Upscale crop
-    h, w = crop.shape[:2]
-    crop_resized = cv2.resize(crop, (w * 3, h * 3), interpolation=cv2.INTER_CUBIC)
+    if plate_contour is not None:
+        cv2.drawContours(img, [plate_contour], -1, (0, 255, 0), 3)
+        # Save to disk instead of window popup
+        cv2.imwrite(output_path, img)
+        print(f"Success! OpenCV output saved to: {output_path}")
+    else:
+        print("No rectangular plate detected using traditional contours.")
 
-    # 2. Grayscale & Threshold
-    gray = cv2.cvtColor(crop_resized, cv2.COLOR_BGR2GRAY)
-    _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+def find_plate_by_yolo(image_path, output_path='output_yolo.jpg'):
+    # Load model
+    model = YOLO('yolov8n.pt') 
+    
+    # Run prediction and leverage built-in saving feature
+    # 'save=True' automatically drops a boxed image into a runs/ directory
+    results = model(image_path, save=True)
+    
+    # Alternatively, manually save to a specific filename:
+    img = cv2.imread(image_path)
+    for result in results:
+        boxes = result.boxes
+        for box in boxes:
+            x1, y1, x2, y2 = map(int, box.xyxy[0])
+            conf = float(box.conf[0])
+            
+            if conf > 0.4:
+                cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 3)
+                cv2.putText(img, f"Plate: {conf:.2f}", (x1, y1 - 10), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+                
+                # Optional: Save a separate crop of the plate region
+                cropped_plate = img[y1:y2, x1:x2]
+                cv2.imwrite('cropped_plate.jpg', cropped_plate)
 
-    # 3. Strip outer border frame
-    cleaned = clean_plate_borders(thresh)
-
-    # 4. Add fresh white padding around isolated text
-    padded = cv2.copyMakeBorder(cleaned, 20, 20, 20, 20, cv2.BORDER_CONSTANT, value=255)
-
-    # TODO: Remove, for debugging
-    # --- DEBUG VISUALIZATION ---
-    target_width = padded.shape[1]
-
-    def prep_for_stack(img):
-        if len(img.shape) == 2:
-            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-        return cv2.resize(img, (target_width, int(img.shape[0] * (target_width / img.shape[1]))))
-
-    combined = cv2.vconcat([
-        prep_for_stack(crop_resized),
-        prep_for_stack(gray),
-        prep_for_stack(thresh),
-        prep_for_stack(cleaned),
-        prep_for_stack(padded)
-    ])
-    cv2.imwrite("../processing-v5.jpg", combined)
-
-    return padded
+    cv2.imwrite(output_path, img)
+    print(f"Success! Custom YOLO rendering saved to: {output_path}")
 
 def extract_license_plates(frame):
     # PSM 7 = Single line of text
     # With the addition of a character whitelist
     OCR_CONFIG = r"--psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     
-    # processed_image = _preprocess_plate(frame)
-    # processed_image = _preprocess_plate2(frame)
-    # processed_image = _preprocess_plate3(frame)
-    processed_image = _preprocess_plate4(frame)
+    processed_image = _preprocess_plate(frame)
 
     try:
         text = pytesseract.image_to_string(processed_image, config=OCR_CONFIG)
