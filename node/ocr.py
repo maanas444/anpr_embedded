@@ -51,13 +51,23 @@ def find_plate_by_yolo(image_path, output_path='../results/output_yolo.jpg'):
     # model = YOLO("node/models/license-plate-finetune-v1s.pt")  # Small : 19.2  MB
 
     # 2. Export to NCNN format (creates a folder named 'yolov11n_ncnn_model')
-    model.export(format="ncnn")
+    model.export(format="ncnn", verbose=False)
+
+    # Quiet down Ultralytics logger
+    import os
+    os.environ["YOLO_VERBOSE"] = "False"
+
+    # Suppress PyTorch/Python deprecation warnings
+    import warnings
+    warnings.filterwarnings("ignore")
 
     # 3. Load the exported model for sub-100ms inference
-    ncnn_model = YOLO("./yolov11n_ncnn_model")
+    ncnn_model = YOLO("node/models/license-plate-finetune-v1n_ncnn_model")
+    # ncnn_model = YOLO("node/models/license-plate-finetune-v1s_ncnn_model")
     results = ncnn_model(image_path)
     
     # Alternatively, manually save to a specific filename:
+    i = 0
     img = cv2.imread(image_path)
     for result in results:
         boxes = result.boxes
@@ -72,7 +82,8 @@ def find_plate_by_yolo(image_path, output_path='../results/output_yolo.jpg'):
                 
                 # Optional: Save a separate crop of the plate region
                 cropped_plate = img[y1:y2, x1:x2]
-                cv2.imwrite('cropped_plate.jpg', cropped_plate)
+                cv2.imwrite(f"../results/cropped_plate_{i}.jpg", cropped_plate)
+                i += 1
 
     cv2.imwrite(output_path, img)
     print(f"Success! Custom YOLO rendering saved to: {output_path}")
