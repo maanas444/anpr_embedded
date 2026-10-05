@@ -54,8 +54,44 @@ def find_plates(img):
 
     return plates
 
+_plate_count = 0
 def process_plate_image(img):
-    return img
+    """
+    Preprocess cropped license plate:
+    1. Crop horizontal outer margins (15% | removes 'NEW ZEALAND' logos on side badges).
+    2. Resize up for better OCR resolution.
+    3. Grayscale + CLAHE for contrast improvement across dark & light plates.
+    """
+    global _plate_count
+    h, w = img.shape[:2]
+
+    # Crop off outer 15% left & right sides to ignore side badges/logos
+    margin_x = int(w * 0.15)
+    cropped = img[:, margin_x:w - margin_x]
+
+    # Convert to grayscale
+    gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+
+    # Invert image if background is dark (mean pixel intensity < 128)
+    if np.mean(gray) < 128:
+        gray = cv2.bitwise_not(gray)
+
+    # Resize to standard OCR height (~120px) using CUBIC interpolation
+    target_h = 120
+    aspect_ratio = cropped.shape[1] / cropped.shape[0]
+    target_w = int(target_h * aspect_ratio)
+    resized = cv2.resize(gray, (target_w, target_h), interpolation=cv2.INTER_CUBIC)
+
+    # Contrast enhancement (CLAHE)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    enhanced = clahe.apply(resized)
+
+    if DEBUG_MODE:
+        cv2.imwrite(f"{RESULTS_FOLDER}/unprocessed_plate{_plate_count}.jpg", img)
+        cv2.imwrite(f"{RESULTS_FOLDER}/processed_plate{_plate_count}.jpg", enhanced)
+        _plate_count += 1
+
+    return enhanced
 
 _READER = None
 def get_ocr_reader():
@@ -80,10 +116,11 @@ def read_plates(plate_images):
             detail=0,
             allowlist=CHAR_SET,
             paragraph=False,
-            low_text=0.3
+            text_threshold=0.5,  # Lower seed threshold
+            low_text=0.2,        # Expand detection mask to capture thin lines
         )
 
-        number_plates.append("".join(text).strip())
+        number_plates.append(" ".join(text).strip())
 
     return number_plates
 
