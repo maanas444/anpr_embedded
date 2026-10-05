@@ -17,25 +17,45 @@ from ultralytics import YOLO
 # 4. Align/Rotate/Warp text
 # 5. OCR on plates
 
-def preprocess_plate(img, height=80):
+def stack_vertically(frames, labels):
+    labeled = []
+    for img, text in zip(frames, labels):
+        # Convert grayscale (2D) to 3-channel BGR (3D) if needed
+        f = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR) if img.ndim == 2 else img.copy()
+        
+        # Top-left corner with larger font scale (1.2) and thicker stroke (3)
+        cv2.putText(f, text, (15, 45), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3)
+        labeled.append(f)
+        
+    return np.vstack(labeled)
+
+def preprocess(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    return gray
+
+def preprocess_plate(img):
     """Cropped plate image (BGR or gray) -> binary image, dark text on light."""
-    gray = img if img.ndim == 2 else cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
- 
-    # Normalise size
-    scale = height / gray.shape[0]
-    gray = cv2.resize(gray, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
- 
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
     # Denoise and even out contrast
-    gray = cv2.bilateralFilter(gray, 9, 75, 75)
-    gray = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(gray)
- 
+    bilateral = cv2.bilateralFilter(gray, 13, 15, 15)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(bilateral)
+
     # Binarize
-    _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
- 
+    _, binary = cv2.threshold(clahe, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
     # Text is the minority colour: make sure it's the dark one
     if np.mean(binary) < 127:
         binary = cv2.bitwise_not(binary)
- 
+
+    # TODO: Remove, for debugging
+    cv2.imwrite( "../results/pre-process.jpg",
+        stack_vertically(
+            [ img,   gray,   bilateral,   clahe,   binary], 
+            ["raw", "gray", "bilateral", "CLAHE", "binary"]
+        )
+    )
+
     return binary
 
 def find_plate_by_contours(image_path, output_path='../results/output_contours.jpg'):
@@ -48,7 +68,7 @@ def find_plate_by_contours(image_path, output_path='../results/output_contours.j
     blurred = cv2.bilateralFilter(gray, 11, 17, 17)
     edged = cv2.Canny(blurred, 30, 200)
     
-    # contours, _ = cv2.findContours(edged.copy(), cv2.RETRE_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # contours, _ = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours, _ = cv2.findContours(edged.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     contours = sorted(contours, key=cv2.contourArea, reverse=True)[:50]
     
@@ -129,18 +149,48 @@ def find_plate_by_yolo(image_path, output_path='../results/output_yolo.jpg'):
     cv2.imwrite(output_path, img)
     print(f"Success! Custom YOLO rendering saved to: {output_path}")
 
-def extract_license_plates(frame):
+def extract_number_plate_text(roi):
     # PSM 7 = Single line of text
     # With the addition of a character whitelist
     OCR_CONFIG = r"--psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    
-    processed_image = preprocess_plate(frame)
-    find_plate_by_contours(processed_image)
 
     try:
-        text = pytesseract.image_to_string(processed_image, config=OCR_CONFIG)
+        text = pytesseract.image_to_string(roi, config=OCR_CONFIG)
         return text.strip()
     except TesseractNotFoundError:
         print(f"[ERROR] Tesseract is not installed (or not added to system PATH)!\n        Run 'install-ocr' to install!")
         import sys
         sys.exit(1)
+
+def extract_number_plates(frame):
+    
+    processed_image = preprocess(frame)
+
+    cv2.imwrite( "../results/pre-processed.jpg", processed_image )
+    find_plate_by_contours("../results/pre-processed.jpg")
+
+    file_prefix = "../results/cropped_plate_"
+    np0  = f"2"
+    np1  = f"3"
+    np2  = f"0"
+    np3  = f"1"
+    img0 = cv2.imread(f"{file_prefix}{np0}.jpg")
+    img1 = cv2.imread(f"{file_prefix}{np1}.jpg")
+    img2 = cv2.imread(f"{file_prefix}{np2}.jpg")
+    img3 = cv2.imread(f"{file_prefix}{np3}.jpg")
+    img0 = preprocess_plate(img0)
+    img1 = preprocess_plate(img1)
+    img2 = preprocess_plate(img2)
+    img3 = preprocess_plate(img3)
+    np0  = f"pp_{np0}"
+    np1  = f"pp_{np1}"
+    np2  = f"pp_{np2}"
+    np3  = f"pp_{np3}"
+    cv2.imwrite(f"{file_prefix}{np0}.jpg", img0)
+    cv2.imwrite(f"{file_prefix}{np1}.jpg", img1)
+    cv2.imwrite(f"{file_prefix}{np2}.jpg", img2)
+    cv2.imwrite(f"{file_prefix}{np3}.jpg", img3)
+    print(f"License Plate 0: \"{extract_number_plate_text(f"{file_prefix}{np0}.jpg")}\"")
+    print(f"License Plate 1: \"{extract_number_plate_text(f"{file_prefix}{np1}.jpg")}\"")
+    print(f"License Plate 2: \"{extract_number_plate_text(f"{file_prefix}{np2}.jpg")}\"")
+    print(f"License Plate 3: \"{extract_number_plate_text(f"{file_prefix}{np3}.jpg")}\"")
