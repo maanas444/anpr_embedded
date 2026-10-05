@@ -2,14 +2,23 @@
 Automatic Number Plate Recognition system for ENSE810 - Embedded Software Engineering
 
 ## Setup
-Create & Setup (Linux:
+### General setup (Linux):
 ```
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e .
 ```
 
-How to exit virtual environment:
+### Node setup:
+```
+pip install -e .[node]
+```
+
+### Server setup:
+```
+pip install -e .[server]
+```
+
+### How to exit virtual environment:
 ```
 deactivate
 ```
