@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "anpr_embedded"
+version = "0.1.0"
+description = "An embedded software engineering project creating a Automatic Number Plate Recognition (ANPR) for ENSE810 (Embedded Software Engineering) at AUT."
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26.0",
+    "opencv-python>=4.8.0",
+]
+
+authors = [
+    { name = "Caleb Pace" },
+    { name = "Kevin D'Lima" },
+    { name = "Maanas Mehta" },
+    { name = "Santiago Viscarra" }
+]
+
+
+[project.scripts]
+node   = "node.main:main"
+server = "server.main:main"
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["node", "server"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]  # Enforce basic errors, pyflakes, and import sorting
+ignore = ["E501"]         # Ignore line length errors (let the formatter handle wrapping)
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
