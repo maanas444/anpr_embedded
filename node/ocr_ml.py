@@ -116,8 +116,9 @@ def read_plates(plate_images):
             detail=0,
             allowlist=CHAR_SET,
             paragraph=False,
-            text_threshold=0.5,  # Lower seed threshold
-            low_text=0.2,        # Expand detection mask to capture thin lines
+            text_threshold=0.5,
+            low_text=0.3,        # Expand detection mask to capture thin lines
+            mag_ratio=1.5
         )
 
         number_plates.append(" ".join(text).strip())
