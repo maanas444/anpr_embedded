@@ -12,7 +12,7 @@ from ultralytics import YOLO
 # 4. Align/Rotate/Warp text
 # 5. OCR on plates
 
-def find_plate_by_contours(image_path, output_path='output_contours.jpg'):
+def find_plate_by_contours(image_path, output_path='../results/output_contours.jpg'):
     img = cv2.imread(image_path)
     if img is None:
         print(f"Error: Could not load image from {image_path}")
@@ -45,13 +45,17 @@ def find_plate_by_contours(image_path, output_path='output_contours.jpg'):
     else:
         print("No rectangular plate detected using traditional contours.")
 
-def find_plate_by_yolo(image_path, output_path='output_yolo.jpg'):
-    # Load model
-    model = YOLO('yolov8n.pt') 
-    
-    # Run prediction and leverage built-in saving feature
-    # 'save=True' automatically drops a boxed image into a runs/ directory
-    results = model(image_path, save=True)
+def find_plate_by_yolo(image_path, output_path='../results/output_yolo.jpg'):
+    # 1. Load the model
+    model = YOLO("node/models/license-plate-finetune-v1n.pt")  # Nano  :  5.47 MB
+    # model = YOLO("node/models/license-plate-finetune-v1s.pt")  # Small : 19.2  MB
+
+    # 2. Export to NCNN format (creates a folder named 'yolov11n_ncnn_model')
+    model.export(format="ncnn")
+
+    # 3. Load the exported model for sub-100ms inference
+    ncnn_model = YOLO("./yolov11n_ncnn_model")
+    results = ncnn_model(image_path)
     
     # Alternatively, manually save to a specific filename:
     img = cv2.imread(image_path)
