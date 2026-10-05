@@ -6,26 +6,30 @@ build-backend = "hatchling.build"
 name = "anpr_embedded"
 version = "0.1.0"
 description = "An embedded software engineering project creating a Automatic Number Plate Recognition (ANPR) for ENSE810 (Embedded Software Engineering) at AUT."
-requires-python = ">=3.11"
-dependencies = [
-    "numpy>=1.26.0",
-    "opencv-python>=4.8.0",
-    "tesseract-ocr",
-    "pytesseract"
-]
-
 authors = [
     { name = "Caleb Pace" },
     { name = "Kevin D'Lima" },
     { name = "Maanas Mehta" },
     { name = "Santiago Viscarra" }
 ]
+requires-python = ">=3.11"
+dependencies = [ # Shared dependencies
+]
+[project.optional-dependencies]
+node = [ # Node specific dependencies
+    "numpy>=1.26.0",
+    "opencv-python>=4.8.0",
+    "pytesseract"
+]
+server = [ # Server specific dependencies
+]
 
 
 [project.scripts]
-node     = "node.main:main"
-cam-test = "node.camera:test"
-server   = "server.main:main"
+install-ocr = "node.tesseract_installer:install"
+cam-test    = "node.camera:test"
+node        = "node.main:main"
+server      = "server.main:main"
 
 
 [tool.hatch.build.targets.wheel]
