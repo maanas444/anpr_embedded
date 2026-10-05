@@ -8,7 +8,8 @@ cam = Camera()
 def trigger_read():
     # frame = cam.read_frame()  # TODO: Uncomment, for debugging
     import cv2  # TODO: Remove, for debugging
-    frame = cv2.imread("../captured_image.jpg")  # TODO: Remove, for debugging
+    frame = cv2.imread("../tmp.png")  # TODO: Remove, for debugging
+    # frame = cv2.imread("../captured_image.jpg")  # TODO: Remove, for debugging
 
     text  = extract_license_plates(frame)
     print(f"License Plate: \"{text}\"")
