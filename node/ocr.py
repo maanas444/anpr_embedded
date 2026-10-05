@@ -12,6 +12,27 @@ from ultralytics import YOLO
 # 4. Align/Rotate/Warp text
 # 5. OCR on plates
 
+def preprocess_plate(img, height=80):
+    """Cropped plate image (BGR or gray) -> binary image, dark text on light."""
+    gray = img if img.ndim == 2 else cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+ 
+    # Normalise size
+    scale = height / gray.shape[0]
+    gray = cv2.resize(gray, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+ 
+    # Denoise and even out contrast
+    gray = cv2.bilateralFilter(gray, 9, 75, 75)
+    gray = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(gray)
+ 
+    # Binarize
+    _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+ 
+    # Text is the minority colour: make sure it's the dark one
+    if np.mean(binary) < 127:
+        binary = cv2.bitwise_not(binary)
+ 
+    return binary
+
 def find_plate_by_contours(image_path, output_path='../results/output_contours.jpg'):
     img = cv2.imread(image_path)
     if img is None:
@@ -108,8 +129,8 @@ def extract_license_plates(frame):
     # With the addition of a character whitelist
     OCR_CONFIG = r"--psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     
-    # processed_image = _preprocess_plate(frame)
-    processed_image = frame
+    processed_image = preprocess_plate(frame)
+    find_plate_by_contours(processed_image)
 
     try:
         text = pytesseract.image_to_string(processed_image, config=OCR_CONFIG)
