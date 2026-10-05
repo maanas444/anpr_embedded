@@ -48,7 +48,6 @@ def find_plate_by_contours(image_path, output_path='../results/output_contours.j
 def find_plate_by_yolo(image_path, output_path='../results/output_yolo.jpg'):
     # 1. Load the model
     model = YOLO("node/models/license-plate-finetune-v1n.pt")  # Nano  :  5.47 MB
-    # model = YOLO("node/models/license-plate-finetune-v1s.pt")  # Small : 19.2  MB
 
     # 2. Export to NCNN format (creates a folder named 'yolov11n_ncnn_model')
     model.export(format="ncnn", verbose=False)
@@ -63,8 +62,9 @@ def find_plate_by_yolo(image_path, output_path='../results/output_yolo.jpg'):
 
     # 3. Load the exported model for sub-100ms inference
     ncnn_model = YOLO("node/models/license-plate-finetune-v1n_ncnn_model")
-    # ncnn_model = YOLO("node/models/license-plate-finetune-v1s_ncnn_model")
     results = ncnn_model(image_path)
+
+    # results = model(image_path)
     
     # Alternatively, manually save to a specific filename:
     i = 0
