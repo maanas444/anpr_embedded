@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from node.camera import Camera
-from node.ocr import extract_number_plates, find_plate_by_contours, find_plate_by_yolo, preprocess_plate
-
+# from node.ocr import extract_number_plates, find_plate_by_contours, find_plate_by_yolo, preprocess_plate
+from node.ocr_ml import extract_number_plates
 
 cam = Camera()
 
@@ -11,9 +11,13 @@ def trigger_read():
     frame = cv2.imread("../ocr-samples/four-plates-vertical-stack.jpg")  # TODO: Remove, for debugging
     # frame = cv2.imread("../captured_image.jpg")  # TODO: Remove, for debugging
 
-    extract_number_plates(frame)
+    # extract_number_plates(frame)
     # text  = extract_number_plates(frame)
-    # print(f"License Plate: \"{text}\"")
+    # print(f"Number Plate: \"{text}\"")
+
+    for i, plate in enumerate(extract_number_plates(frame)):
+        print(f"[{i}] Number Plate: \"{plate}\"")
+
 
 def main():
     # print("Hello, from a Camera Node!")

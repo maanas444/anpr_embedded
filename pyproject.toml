@@ -19,7 +19,8 @@ dependencies = [ # Shared dependencies
 node = [ # Node specific dependencies
     "numpy>=1.26.0",
     "opencv-python>=4.8.0",
-    "pytesseract"
+    "pytesseract",  # TODO: Maybe remove
+    "easyocr"
 
     # pip install --extra-index-url https://download.pytorch.org/whl/cpu torch torchvision ultralytics
 ]
