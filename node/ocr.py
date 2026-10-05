@@ -22,28 +22,44 @@ def find_plate_by_contours(image_path, output_path='../results/output_contours.j
     blurred = cv2.bilateralFilter(gray, 11, 17, 17)
     edged = cv2.Canny(blurred, 30, 200)
     
+    # contours, _ = cv2.findContours(edged.copy(), cv2.RETRE_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours, _ = cv2.findContours(edged.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    contours = sorted(contours, key=cv2.contourArea, reverse=True)[:10]
+    contours = sorted(contours, key=cv2.contourArea, reverse=True)[:50]
     
-    plate_contour = None
+    candidate_contours = []
+    boxes = []
+    scores = []
+
     for c in contours:
         perimeter = cv2.arcLength(c, True)
         approx = cv2.approxPolyDP(c, 0.02 * perimeter, True)
         
+        # Check if shape is a quadrilateral
         if len(approx) == 4:
             x, y, w, h = cv2.boundingRect(approx)
             aspect_ratio = float(w) / h
+            
+            # Filter typical license plate aspect ratios
             if 2.0 <= aspect_ratio <= 5.5:
-                plate_contour = approx
-                break
+                candidate_contours.append(approx)
+                boxes.append([x, y, w, h])
+                scores.append(float(cv2.contourArea(c)))
 
-    if plate_contour is not None:
-        cv2.drawContours(img, [plate_contour], -1, (0, 255, 0), 3)
-        # Save to disk instead of window popup
+    # Apply Non-Maximum Suppression to filter out overlapping/nested detections
+    detected_plates = []
+    if candidate_contours:
+        indices = cv2.dnn.NMSBoxes(boxes, scores, score_threshold=0.0, nms_threshold=0.3)
+        if len(indices) > 0:
+            for i in indices.flatten():
+                detected_plates.append(candidate_contours[i])
+
+    # Draw and save results
+    if detected_plates:
+        cv2.drawContours(img, detected_plates, -1, (0, 255, 0), 3)
         cv2.imwrite(output_path, img)
-        print(f"Success! OpenCV output saved to: {output_path}")
+        print(f"Success! Detected {len(detected_plates)} plate(s). Saved to: {output_path}")
     else:
-        print("No rectangular plate detected using traditional contours.")
+        print("No rectangular plates detected using traditional contours.")
 
 def find_plate_by_yolo(image_path, output_path='../results/output_yolo.jpg'):
     # # 1. Load the model
@@ -92,7 +108,8 @@ def extract_license_plates(frame):
     # With the addition of a character whitelist
     OCR_CONFIG = r"--psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     
-    processed_image = _preprocess_plate(frame)
+    # processed_image = _preprocess_plate(frame)
+    processed_image = frame
 
     try:
         text = pytesseract.image_to_string(processed_image, config=OCR_CONFIG)
