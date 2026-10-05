@@ -18,9 +18,15 @@ def main():
     # print("Hello, from a Camera Node!")
     # trigger_read()
 
-    img_path = "../ocr-samples/four-plates-vertical-stack.jpg"
-    find_plate_by_contours(img_path)
-    find_plate_by_yolo(img_path)
+    # img_path = "../ocr-samples/four-plates-vertical-stack.jpg"
+    # find_plate_by_contours(img_path)
+    # # find_plate_by_yolo(img_path)
+
+    print(f"License Plate 0: \"{extract_license_plates("../results/cropped_plate_2.jpg")}\"")
+    print(f"License Plate 1: \"{extract_license_plates("../results/cropped_plate_0.jpg")}\"")
+    print(f"License Plate 2: \"{extract_license_plates("../results/cropped_plate_3.jpg")}\"")
+    print(f"License Plate 3: \"{extract_license_plates("../results/cropped_plate_1.jpg")}\"")
+    
 
 
 if __name__ == "__main__":
