@@ -1,26 +1,30 @@
 """detection.py - detects a vehicle and pulses the IR LED."""
 
-import random
 import time
+import lgpio
 
-TRIGGER_DISTANCE_M = 1.0
+LED_PIN = 2
+TRIGGER_PIN = 5
+
+h = lgpio.gpiochip_open(0)
+lgpio.gpio_claim_output(h, LED_PIN)
+lgpio.gpio_claim_input(h, TRIGGER_PIN, lgpio.SET_PULL_UP)
 
 
-def read_distance_sensor():
-    """Mock check: True if a vehicle is within range."""
-    distance = random.uniform(0.1, 2.0)
-    return distance <= TRIGGER_DISTANCE_M
+def should_trigger():
+    """Real check: True while the trigger pin is touched to GND."""
+    return lgpio.gpio_read(h, TRIGGER_PIN) == 0
 
 
 def pulse_led():
-    print("IR LED ON")
+    lgpio.gpio_write(h, LED_PIN, 1)
     time.sleep(0.5)
-    print("IR LED OFF")
+    lgpio.gpio_write(h, LED_PIN, 0)
 
 
 def detect_loop(on_detect=None):
     while True:
-        if read_distance_sensor():
+        if should_trigger():
             pulse_led()
             if on_detect:
                 on_detect()
