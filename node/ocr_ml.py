@@ -64,6 +64,52 @@ def find_plates(img):
 
     return plates
 
+def _order_points(pts):
+    # returns top-left, top-right, bottom-right, bottom-left
+    pts = pts.reshape(4, 2).astype("float32")
+    s = pts.sum(axis=1)
+    d = np.diff(pts, axis=1).ravel()
+    return np.array([pts[np.argmin(s)], pts[np.argmin(d)],
+                     pts[np.argmax(s)], pts[np.argmax(d)]], dtype="float32")
+
+def deskew_plate(img):
+    """Warp the plate to a flat rectangle. Falls back to the original crop."""
+    pad = 15  # YOLO crops are tight, so give the contour room to close
+    img = cv2.copyMakeBorder(img, pad, pad, pad, pad, cv2.BORDER_REPLICATE)
+    h, w = img.shape[:2]
+
+    gray = cv2.GaussianBlur(cv2.cvtColor(img, cv2.COLOR_BGR2GRAY), (5, 5), 0)
+    _, mask = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # If the plate is the dark region instead, flip (check the border pixels)
+    border = np.concatenate([mask[0], mask[-1], mask[:, 0], mask[:, -1]])
+    if border.mean() > 127:
+        mask = cv2.bitwise_not(mask)
+
+    # Close the gaps left by the letters
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE,
+                            cv2.getStructuringElement(cv2.MORPH_RECT, (15, 15)))
+
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if not contours:
+        return img
+    cnt = max(contours, key=cv2.contourArea)
+    if cv2.contourArea(cnt) < 0.25 * w * h:
+        return img  # didn't find a plate-sized blob
+
+    hull = cv2.convexHull(cnt)
+    approx = cv2.approxPolyDP(hull, 0.02 * cv2.arcLength(hull, True), True)
+    quad = approx if len(approx) == 4 else cv2.boxPoints(cv2.minAreaRect(hull))
+
+    tl, tr, br, bl = _order_points(np.asarray(quad))
+    out_w = int(max(np.linalg.norm(tr - tl), np.linalg.norm(br - bl)))
+    out_h = int(max(np.linalg.norm(bl - tl), np.linalg.norm(br - tr)))
+    if out_w < 20 or out_h < 10:
+        return img
+
+    dst = np.array([[0, 0], [out_w, 0], [out_w, out_h], [0, out_h]], dtype="float32")
+    M = cv2.getPerspectiveTransform(np.array([tl, tr, br, bl], dtype="float32"), dst)
+    return cv2.warpPerspective(img, M, (out_w, out_h))
+
 _plate_count = 0
 def process_plate_image(img):
     """
@@ -73,6 +119,8 @@ def process_plate_image(img):
     3. Grayscale + CLAHE for contrast improvement across dark & light plates.
     """
     global _plate_count
+
+    img = deskew_plate(img)  # Rotate
     h, w = img.shape[:2]
 
     # Crop off outer 5% left & right sides to ignore side badges/logos
@@ -137,4 +185,6 @@ def read_plates(plate_images):
 
 def extract_number_plates(frame):
     plates = find_plates(frame)
+    if DEBUG_MODE:
+        print(f"{len(plates)} plates found! reading (ocr)...")
     return read_plates(plates)
