@@ -10,6 +10,7 @@ source .venv/bin/activate
 
 ### Node setup:
 ```
+pip install --extra-index-url https://download.pytorch.org/whl/cpu torch torchvision
 pip install -e .[node]
 ```
 

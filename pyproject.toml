@@ -17,12 +17,13 @@ dependencies = [ # Shared dependencies
 ]
 [project.optional-dependencies]
 node = [ # Node specific dependencies
+    # pip install --extra-index-url https://download.pytorch.org/whl/cpu torch torchvision
     "numpy>=1.26.0",
     "opencv-python>=4.8.0",
     "pytesseract",  # TODO: Maybe remove
-    "easyocr"
-
-    # pip install --extra-index-url https://download.pytorch.org/whl/cpu torch torchvision ultralytics ncnn
+    "easyocr",
+    "ultralytics",
+    "ncnn"
 ]
 server = [ # Server specific dependencies
 ]
