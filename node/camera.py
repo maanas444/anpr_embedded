@@ -24,3 +24,7 @@ class Camera():
             return None  # No image
         
         return frame
+
+
+if __name__ == "__main__":
+    test()
