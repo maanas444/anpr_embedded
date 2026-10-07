@@ -18,11 +18,15 @@ RESULTS_FOLDER = "../results"
 MODEL_PATH_WITHOUT_EXTENSION = "node/models/license-plate-finetune-v1n"  # Nano : 5.47 MB
 
 
+
 def _export_model():
     model = YOLO(f"{MODEL_PATH_WITHOUT_EXTENSION}.pt")
     model.export(format="ncnn")
 
-def find_plates(img):
+ncnn_model = None
+def load_model():
+    global ncnn_model
+
     NCNN_MODEL_PATH = f"{MODEL_PATH_WITHOUT_EXTENSION}_ncnn_model"
 
     if not Path(NCNN_MODEL_PATH).exists():
@@ -30,6 +34,12 @@ def find_plates(img):
 
     # Load model and process image
     ncnn_model = YOLO(NCNN_MODEL_PATH)
+
+def find_plates(img):
+    global ncnn_model
+    if ncnn_model is None:
+        return  # Early exit: model not initialised
+
     results = ncnn_model(img, verbose=False)
     
     # Extract Regions of Interest (RoI)
@@ -58,15 +68,15 @@ _plate_count = 0
 def process_plate_image(img):
     """
     Preprocess cropped license plate:
-    1. Crop horizontal outer margins (15% | removes 'NEW ZEALAND' logos on side badges).
+    1. Crop horizontal outer margins (5% | removes 'NEW ZEALAND' logos on side badges).
     2. Resize up for better OCR resolution.
     3. Grayscale + CLAHE for contrast improvement across dark & light plates.
     """
     global _plate_count
     h, w = img.shape[:2]
 
-    # Crop off outer 15% left & right sides to ignore side badges/logos
-    margin_x = int(w * 0.15)
+    # Crop off outer 5% left & right sides to ignore side badges/logos
+    margin_x = int(w * 0.05)
     cropped = img[:, margin_x:w - margin_x]
 
     # Convert to grayscale

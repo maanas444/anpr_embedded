@@ -1,38 +1,51 @@
 #!/usr/bin/env python3
+import time
+import datetime
+
 from node.camera import Camera
-# from node.ocr import extract_number_plates, find_plate_by_contours, find_plate_by_yolo, preprocess_plate
-from node.ocr_ml import extract_number_plates
+from node.ocr_ml import load_model, extract_number_plates
+
 
 cam = Camera()
 
+def _print_timestamp(timestamp_ns):
+    seconds = timestamp_ns // 1_000_000_000
+    milliseconds = (timestamp_ns % 1_000_000_000) // 1_000_000
+    
+    local_dt = datetime.datetime.fromtimestamp(seconds)
+    
+    formatted_time = local_dt.strftime(f"%Y/%m/%d %H:%M:%S.{milliseconds:03d}")
+    return formatted_time
+
+def number_plate_read(plate_text_raw, timestamp_ns):
+    MAX_LENGTH = 10
+
+    plate = plate_text_raw[:MAX_LENGTH]
+    print(f"[{_print_timestamp(timestamp_ns)}] Number Plate: \"plate\" (RAW:\"{plate_text_raw}\")")
+
+    # TODO: Trigger DB sender
+
 def trigger_read():
-    # frame = cam.read_frame()  # TODO: Uncomment, for debugging
-    import cv2  # TODO: Remove, for debugging
-    frame = cv2.imread("../ocr-samples/four-plates-vertical-stack.jpg")  # TODO: Remove, for debugging
-    # frame = cv2.imread("../captured_image.jpg")  # TODO: Remove, for debugging
+    frame = cam.read_frame()
+    timestamp_ns = time.time_ns()
 
-    # extract_number_plates(frame)
-    # text  = extract_number_plates(frame)
-    # print(f"Number Plate: \"{text}\"")
+    # TODO: Remove, for debugging
+    import cv2
+    cv2.imwrite("../results/image.jpg", frame)
+    print("Got image - Extracting plates...")
 
-    for i, plate in enumerate(extract_number_plates(frame)):
-        print(f"[{i}] Number Plate: \"{plate}\"")
-
+    plates = extract_number_plates(frame)
+    for plate in plates:
+        number_plate_read(plate, timestamp_ns)
 
 def main():
-    # print("Hello, from a Camera Node!")
+    load_model()
+
+def test():
+    load_model()
+    input("Camera ready")
     trigger_read()
-
-    # img_path = "../ocr-samples/four-plates-vertical-stack.jpg"
-    # find_plate_by_contours(img_path)
-    # # find_plate_by_yolo(img_path)
-
-    # print(f"License Plate 0: \"{extract_number_plates("../results/cropped_plate_2.jpg")}\"")
-    # print(f"License Plate 1: \"{extract_number_plates("../results/cropped_plate_0.jpg")}\"")
-    # print(f"License Plate 2: \"{extract_number_plates("../results/cropped_plate_3.jpg")}\"")
-    # print(f"License Plate 3: \"{extract_number_plates("../results/cropped_plate_1.jpg")}\"")
-    
 
 
 if __name__ == "__main__":
-    main()
+    test()
