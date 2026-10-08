@@ -35,6 +35,25 @@ def load_model():
     # Load model and process image
     ncnn_model = YOLO(NCNN_MODEL_PATH)
 
+def _dedupe(dets, contain_thresh=0.7):
+    # dets: list of (conf, x1, y1, x2, y2); keep highest-confidence first
+    dets = sorted(dets, reverse=True)
+    kept = []
+    for conf, x1, y1, x2, y2 in dets:
+        area = (x2 - x1) * (y2 - y1)
+        dup = False
+        for _, kx1, ky1, kx2, ky2 in kept:
+            iw = max(0, min(x2, kx2) - max(x1, kx1))
+            ih = max(0, min(y2, ky2) - max(y1, ky1))
+            inter = iw * ih
+            smaller = min(area, (kx2 - kx1) * (ky2 - ky1))
+            if smaller > 0 and inter / smaller > contain_thresh:
+                dup = True
+                break
+        if not dup:
+            kept.append((conf, x1, y1, x2, y2))
+    return kept
+
 def find_plates(img):
     global ncnn_model
     if ncnn_model is None:
@@ -43,20 +62,22 @@ def find_plates(img):
     results = ncnn_model(img, verbose=False)
     
     # Extract Regions of Interest (RoI)
-    plates = []
+    dets = []
     for result in results:
-        boxes = result.boxes
-        for box in boxes:
-            x1, y1, x2, y2 = map(int, box.xyxy[0])
+        for box in result.boxes:
             conf = float(box.conf[0])
-            
             if conf > 0.4:  # Confidence cutoff
-                plates.append( img[y1:y2, x1:x2] )  # Save RoI
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                dets.append((conf, x1, y1, x2, y2))  # Save RoI
 
-                if DEBUG_MODE:  # Draw box on image
-                    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 3)
-                    cv2.putText(img, f"Plate: {conf:.2f}", (x1, y1 - 10), 
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+    plates = []
+    for conf, x1, y1, x2, y2 in _dedupe(dets):
+        plates.append( img[y1:y2, x1:x2] )
+        
+        if DEBUG_MODE:  # Draw box on image
+            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 3)
+            cv2.putText(img, f"Plate: {conf:.2f}", (x1, y1 - 10), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
     if DEBUG_MODE:  # Save plate locations
         os.makedirs(RESULTS_FOLDER, exist_ok=True)

@@ -43,7 +43,7 @@ def main():
 
 def test():
     load_model()
-    input("Camera ready")
+    input("Camera ready! ")
     trigger_read()
 
 
