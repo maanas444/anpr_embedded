@@ -9,7 +9,7 @@ from node.ocr_ml import load_model, get_ocr_reader, extract_number_plates
 from node.detection import should_trigger, led_on, led_off
 from node.led_matrix import clear_matrix, show_checkmark, show_cross, scroll_text
 
-from sender import send_data
+from node.sender import send_data
 
 
 DEBUG_MODE = False
