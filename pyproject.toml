@@ -36,7 +36,6 @@ server = [ # Server specific dependencies
 install-ocr = "node.tesseract_installer:install"
 cam-test    = "node.camera:test"
 node        = "node.main:main"
-server      = "server.main:main"
 
 
 [tool.hatch.build.targets.wheel]
