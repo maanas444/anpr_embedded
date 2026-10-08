@@ -29,6 +29,9 @@ def number_plate_read(plate_text_raw, timestamp_ns):
 
     # TODO: Trigger DB sender
 
+    # Display number plate
+    scroll_text(plate)
+
 def trigger_read():
     led_on()
     frame = cam.read_frame()
@@ -40,14 +43,18 @@ def trigger_read():
     cv2.imwrite("../results/image.jpg", frame)
     print("Got image - Extracting plates...")
 
+
     plates = extract_number_plates(frame)
+
     if plates is None:
         print("No plates found!")
         show_cross()
         return
-    show_checkmark()
+
     for plate in plates:
         number_plate_read(plate, timestamp_ns)
+    show_checkmark()
+
 
 # TODO: Remove, for debugging
 def show():
