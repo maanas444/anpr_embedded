@@ -4,15 +4,15 @@ Automatic Number Plate Recognition system for ENSE810 - Embedded Software Engine
 ## Setup
 ### General setup (Linux):
 ```
-python3 -m venv .venv
+python3 -m venv .venv --system-site-packages
 source .venv/bin/activate
 ```
 
 ### Node setup:
 ```
 sudo apt update
-sudo apt install swig build-essential -y
-sudo apt install tesseract-ocr -y
+sudo apt install -y swig python3-dev build-essential liblgpio-dev
+sudo apt install -y tesseract-ocr
 pip install --extra-index-url https://download.pytorch.org/whl/cpu torch torchvision
 pip install -e .[node]
 ```
