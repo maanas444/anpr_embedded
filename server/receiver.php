@@ -17,18 +17,20 @@ header('Content-Type: text/plain');
 
 if (isset($_GET['license_plate']) && isset($_GET['camera'])) {
     $licensePlate = $_GET['license_plate'];
-    $camera = $_GET['camera'];
+    $nodeID = $_GET['node_id'];
+    $timestamp = $_GET['timestamp_ns'];
     // Sanitize input before passing it to the shell.
     // escapeshellarg() wraps each value in quotes and escapes any
     // special characters (including spaces), so the value is treated
     // as a single, safe argument and cannot be used to inject extra
     // shell commands.
     $safeLicensePlate = escapeshellarg($licensePlate);
-    $safeCamera = escapeshellarg($camera);
+    $safeNodeID = escapeshellarg($nodeID);
+    $safeTimestamp = escapeshellarg($timestamp);
     
     // Call the receiver python script, passing the sanitized values
     // as command line arguments (argv[1] and argv[2]).
-    $command = "python3 " . __DIR__ . "/receiver.py " . $safeLicensePlate . " " . $safeCamera;
+    $command = "python3 " . __DIR__ . "/database/db_manager.py write" . $safeLicensePlate . " " . $safeNodeID . " " . $safeTimestamp;
     $output = shell_exec($command);
     
     echo "Data forwarded to receiver script.\n";

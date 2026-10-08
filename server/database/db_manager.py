@@ -39,7 +39,7 @@ def init_db():
     conn.close()
     print("ALNR database schema ready.")
 
-def write_entry(node_name: str, licence_plate: str):
+def write_entry(node_id: str, licence_plate: str, timestamp_ns:int):
     """Write an LP entry and update the occurrence-count table."""
     now = datetime.now()
     conn = get_connection()
@@ -47,7 +47,7 @@ def write_entry(node_name: str, licence_plate: str):
 
     cur.execute(
         "INSERT INTO lp_entries (node_name, licence_plate, seen_at) VALUES (%s, %s, %s)",
-        (node_name, licence_plate, now),
+        (node_id, licence_plate, timestamp_ns),
     )
 
     cur.execute(
@@ -58,13 +58,13 @@ def write_entry(node_name: str, licence_plate: str):
             occurrences = occurrences + 1,
             last_seen = VALUES(last_seen)
         """,
-        (licence_plate, now),
+        (licence_plate, timestamp_ns),
     )
 
     conn.commit()
     cur.close()
     conn.close()
-    print(f"Logged: node='{node_name}' plate='{licence_plate}' at {now}")
+    print(f"Logged: node='{node_id}' plate='{licence_plate}' at {timestamp_ns}")
 
 def list_entries():
     conn = get_connection()
