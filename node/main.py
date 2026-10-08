@@ -41,7 +41,6 @@ def trigger_read():
     timestamp_ns = time.time_ns()
     led_off()
 
-    # TODO: Remove, for debugging
     if DEBUG_MODE:
         import cv2
         cv2.imwrite("../results/image.jpg", frame)
