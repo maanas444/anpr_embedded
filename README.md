@@ -10,6 +10,9 @@ source .venv/bin/activate
 
 ### Node setup:
 ```
+sudo apt update
+sudo apt install swig build-essential -y
+sudo apt install tesseract-ocr -y
 pip install --extra-index-url https://download.pytorch.org/whl/cpu torch torchvision
 pip install -e .[node]
 ```
