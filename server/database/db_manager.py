@@ -37,7 +37,7 @@ def init_db():
     conn.commit()
     cur.close()
     conn.close()
-    print("ALNR database schema ready.")
+    print("ANPR database schema ready.")
 
 def write_entry(node_id: str, licence_plate: str, timestamp_ns:int):
     """Write an LP entry and update the occurrence-count table."""
@@ -88,7 +88,7 @@ def list_entries():
     conn.close()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="ALNR database manager")
+    parser = argparse.ArgumentParser(description="ANPR database manager")
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("init", help="Create schema if not present")
