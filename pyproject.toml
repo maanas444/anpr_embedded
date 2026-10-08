@@ -28,6 +28,7 @@ node = [ # Node specific dependencies
     "lgpio"
 ]
 server = [ # Server specific dependencies
+    "mysql-connector-python"
 ]
 
 
