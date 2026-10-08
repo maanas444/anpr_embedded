@@ -35,6 +35,9 @@ def trigger_read():
     print("Got image - Extracting plates...")
 
     plates = extract_number_plates(frame)
+    if plates is None:
+        print("No plates found!")
+        return
     for plate in plates:
         number_plate_read(plate, timestamp_ns)
 
