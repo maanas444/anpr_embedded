@@ -21,7 +21,7 @@ import urllib.parse
 SERVER_URL = "http://localhost/receiver.php"
 
 
-def send_data(license_plate: str, node_id: str, timestamp_ns:int) -> None:
+def send_data(node_id: str, license_plate: str, timestamp_ns:int) -> None:
     """Send license_plate and camera as URL parameters to the PHP server."""
     # urlencode automatically escapes spaces and special characters
     # (e.g. a space becomes %20), so the data is safe to put in a URL.
