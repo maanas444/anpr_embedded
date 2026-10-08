@@ -22,7 +22,8 @@ def should_trigger():
     try:
         return sense.stick.wait_for_event().action == ACTION_PRESSED
     except KeyboardInterrupt:
-        return False
+        import sys
+        sys.exit(0)
 
 
 def led_on():
