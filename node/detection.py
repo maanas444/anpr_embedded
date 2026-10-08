@@ -19,7 +19,10 @@ def should_trigger():
     # return lgpio.gpio_read(h, TRIGGER_PIN) == 0   # TODO: Uncomment
 
     # TODO: Remove, Placeholder
-    return sense.stick.wait_for_event().action == ACTION_PRESSED
+    try:
+        return sense.stick.wait_for_event().action == ACTION_PRESSED
+    except KeyboardInterrupt:
+        return False
 
 
 def led_on():
