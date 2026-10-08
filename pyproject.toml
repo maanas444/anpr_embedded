@@ -24,7 +24,8 @@ node = [ # Node specific dependencies
     "easyocr",
     "ultralytics",
     "ncnn",
-    "sense-hat"
+    "sense-hat",
+    "lgpio"
 ]
 server = [ # Server specific dependencies
 ]
