@@ -2,6 +2,7 @@
 
 import time
 import lgpio
+
 from sense_hat import SenseHat, ACTION_PRESSED  # TODO: Remove, Placeholder
 
 sense = SenseHat()
@@ -27,9 +28,11 @@ def should_trigger():
 
 
 def led_on():
-    lgpio.gpio_write(h, LED_PIN, 1)
+    # lgpio.gpio_write(h, LED_PIN, 1) # TODO: Uncomment
+    sense.clear((255, 255, 255))  # TODO: Remove, placeholder
 def led_off():
-    lgpio.gpio_write(h, LED_PIN, 0)
+    # lgpio.gpio_write(h, LED_PIN, 0) # TODO: Uncomment
+    sense.clear()  # TODO: Remove, placeholder
 
 # def pulse_led():
 #     lgpio.gpio_write(h, LED_PIN, 1)
