@@ -41,13 +41,13 @@ def init_db():
 
 def write_entry(node_id: str, licence_plate: str, timestamp_ns:int):
     """Write an LP entry and update the occurrence-count table."""
-    now = datetime.now()
+    timestamp = datetime.fromtimestamp(int(timestamp_ns) // 1_000_000_000)
     conn = get_connection()
     cur = conn.cursor()
 
     cur.execute(
         "INSERT INTO lp_entries (node_name, licence_plate, seen_at) VALUES (%s, %s, %s)",
-        (node_id, licence_plate, timestamp_ns),
+        (node_id, licence_plate, timestamp),
     )
 
     cur.execute(
@@ -58,13 +58,13 @@ def write_entry(node_id: str, licence_plate: str, timestamp_ns:int):
             occurrences = occurrences + 1,
             last_seen = VALUES(last_seen)
         """,
-        (licence_plate, timestamp_ns),
+        (licence_plate, timestamp),
     )
 
     conn.commit()
     cur.close()
     conn.close()
-    print(f"Logged: node='{node_id}' plate='{licence_plate}' at {timestamp_ns}")
+    print(f"Logged: node='{node_id}' plate='{licence_plate}' at {timestamp}")
 
 def list_entries():
     conn = get_connection()
