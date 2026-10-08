@@ -1,0 +1,35 @@
+"""detection.py - detects a vehicle and pulses the IR LED."""
+
+import time
+import lgpio
+
+LED_PIN = 2
+TRIGGER_PIN = 5
+
+h = lgpio.gpiochip_open(0)
+lgpio.gpio_claim_output(h, LED_PIN)
+lgpio.gpio_claim_input(h, TRIGGER_PIN, lgpio.SET_PULL_UP)
+
+
+def should_trigger():
+    """Real check: True while the trigger pin is touched to GND."""
+    return lgpio.gpio_read(h, TRIGGER_PIN) == 0
+
+
+def pulse_led():
+    lgpio.gpio_write(h, LED_PIN, 1)
+    time.sleep(0.5)
+    lgpio.gpio_write(h, LED_PIN, 0)
+
+
+def detect_loop(on_detect=None):
+    while True:
+        if should_trigger():
+            pulse_led()
+            if on_detect:
+                on_detect()
+        time.sleep(0.2)
+
+
+if __name__ == "__main__":
+    detect_loop(on_detect=lambda: print("Vehicle detected!"))

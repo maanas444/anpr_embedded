@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "anpr_embedded"
-version = "0.1.0"
+version = "0.5.0"
 description = "An embedded software engineering project creating a Automatic Number Plate Recognition (ANPR) for ENSE810 (Embedded Software Engineering) at AUT."
 authors = [
     { name = "Caleb Pace" },
@@ -23,7 +23,8 @@ node = [ # Node specific dependencies
     "pytesseract",  # TODO: Maybe remove
     "easyocr",
     "ultralytics",
-    "ncnn"
+    "ncnn",
+    "sense-hat"
 ]
 server = [ # Server specific dependencies
 ]
