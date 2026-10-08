@@ -28,7 +28,7 @@ def number_plate_read(plate_text_raw, timestamp_ns):
     MAX_LENGTH = 10
 
     plate = plate_text_raw[:MAX_LENGTH]
-    print(f"[{_print_timestamp(timestamp_ns)}] Number Plate: \"plate\" (RAW:\"{plate_text_raw}\")")
+    print(f"[{_print_timestamp(timestamp_ns)}] Number Plate: \"{plate}\" (RAW:\"{plate_text_raw}\")")
 
     # TODO: Trigger DB sender
 
