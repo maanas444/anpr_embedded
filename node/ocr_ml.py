@@ -13,7 +13,7 @@ os.environ["YOLO_AUTOINSTALL"] = "False"
 os.environ["ULTRALYTICS_AUTOINSTALL"] = "False"
 from ultralytics import YOLO
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 RESULTS_FOLDER = "../results"
 MODEL_PATH_WITHOUT_EXTENSION = "node/models/license-plate-finetune-v1n"  # Nano : 5.47 MB
 
@@ -153,7 +153,7 @@ def process_plate_image(img):
 
     # Resize to standard OCR height (~120px) using CUBIC interpolation
     target_h = 120
-    aspect_ratio = cropped.shape[1] / cropped.shape[0]
+    aspect_ratio = img.shape[1] / img.shape[0]
     target_w = int(target_h * aspect_ratio)
     resized = cv2.resize(gray, (target_w, target_h), interpolation=cv2.INTER_CUBIC)
 
