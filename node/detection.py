@@ -16,20 +16,25 @@ def should_trigger():
     return lgpio.gpio_read(h, TRIGGER_PIN) == 0
 
 
-def pulse_led():
+def led_on():
     lgpio.gpio_write(h, LED_PIN, 1)
-    time.sleep(0.5)
+def led_off():
     lgpio.gpio_write(h, LED_PIN, 0)
 
-
-def detect_loop(on_detect=None):
-    while True:
-        if should_trigger():
-            pulse_led()
-            if on_detect:
-                on_detect()
-        time.sleep(0.2)
+# def pulse_led():
+#     lgpio.gpio_write(h, LED_PIN, 1)
+#     time.sleep(0.5)
+#     lgpio.gpio_write(h, LED_PIN, 0)
 
 
-if __name__ == "__main__":
-    detect_loop(on_detect=lambda: print("Vehicle detected!"))
+# def detect_loop(on_detect=None):
+#     while True:
+#         if should_trigger():
+#             pulse_led()
+#             if on_detect:
+#                 on_detect()
+#         time.sleep(0.2)
+
+
+# if __name__ == "__main__":
+#     detect_loop(on_detect=lambda: print("Vehicle detected!"))
