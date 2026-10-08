@@ -30,7 +30,7 @@ if (isset($_GET['node_id']) && isset($_GET['number_plate']) && isset($_GET['time
     
     // Call the receiver python script, passing the sanitized values
     // as command line arguments (argv[1] and argv[2]).
-    $command = "python3 " . __DIR__ . "/database/db_manager.py write " . $safeNodeID . " " . $safeLicensePlate . " " . $safeTimestamp;
+    $command = "/var/www/venv/python3 " . __DIR__ . "/database/db_manager.py write " . $safeNodeID . " " . $safeLicensePlate . " " . $safeTimestamp;
     $output = shell_exec($command);
     
     echo "Data forwarded to receiver script.\n";

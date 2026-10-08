@@ -13,10 +13,7 @@ authors = [
     { name = "Santiago Viscarra" }
 ]
 requires-python = ">=3.11"
-dependencies = [ # Shared dependencies
-]
-[project.optional-dependencies]
-node = [ # Node specific dependencies
+dependencies = [
     # pip install --extra-index-url https://download.pytorch.org/whl/cpu torch torchvision
     "numpy>=1.26.0",
     "opencv-python>=4.8.0",
@@ -26,9 +23,6 @@ node = [ # Node specific dependencies
     "ncnn",
     "sense-hat",
     "lgpio"
-]
-server = [ # Server specific dependencies
-    "mysql-connector-python"
 ]
 
 

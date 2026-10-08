@@ -2,18 +2,15 @@
 Automatic Number Plate Recognition system for ENSE810 - Embedded Software Engineering
 
 ## Setup
-### General setup (Linux):
+
+### Node setup:
+Setup Virtual Environment
 ```
 python3 -m venv .venv --system-site-packages
 source .venv/bin/activate
 ```
+*Exit a venv using `deactivate`*
 
-#### How to exit virtual environment:
-```
-deactivate
-```
-
-### Node setup:
 ```
 sudo apt update
 sudo apt install -y swig python3-dev build-essential liblgpio-dev
@@ -49,9 +46,11 @@ Add user to DB:
 mysql -u anpr_user -p anpr_db
 ```
 
-Install packages:
+Create Server Virtual Environment:
 ```
-pip install -e .[server]
+sudo python3 -m venv /var/www/venv
+sudo chown -R www-data:www-data /var/www/venv
+sudo -u www-data /var/www/venv/bin/pip install mysql-connector-python
 ```
 
 Initialise DB:
