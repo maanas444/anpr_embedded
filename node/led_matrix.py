@@ -38,6 +38,8 @@ def show_checkmark():
 def show_cross():
     hat.set_pixels([RED if p else BLACK for p in CROSS])
 
+def clear_matrix():
+    hat.clear()
 
 def scroll_text(text):
     hat.show_message(text)
