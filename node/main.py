@@ -73,7 +73,7 @@ def main():
             trigger_read()
             
             try:
-                time.sleep(1)  # Wait before detecting again
+                time.sleep(1.5)  # Wait before detecting again
             except KeyboardInterrupt:
                 break
             finally:
