@@ -4,7 +4,7 @@ import datetime
 import threading
 
 from node.camera import Camera
-# from node.ocr_ml import load_model, get_ocr_reader, extract_number_plates
+from node.ocr_ml import load_model, get_ocr_reader, extract_number_plates
 
 from node.detection import should_trigger, led_on, led_off
 from node.led_matrix import clear_matrix, show_checkmark, show_cross, scroll_text
@@ -46,18 +46,12 @@ def trigger_read():
     timestamp_ns = time.time_ns()
     led_off()
 
-    # TODO: Remove, for debugging
-    import hashlib
-    hex_code = hashlib.md5(frame.tobytes()).hexdigest()
-    print(f"Frame hash: {hex_code}")
-
     if DEBUG_MODE:
         import cv2
         cv2.imwrite("../results/image.jpg", frame)
         print("Got image - Extracting plates...")
 
-    # plates = extract_number_plates(frame)
-    plates = None
+    plates = extract_number_plates(frame)
 
     if plates is None:
         print("No plates found!")
@@ -79,8 +73,8 @@ if DEBUG_MODE:
         cv2.destroyAllWindows()
 
 def main():
-    # load_model()
-    # get_ocr_reader()  # Initialise OCR reader
+    load_model()
+    get_ocr_reader()  # Initialise OCR reader
 
     if DEBUG_MODE:
         threading.Thread(target=show).start()
@@ -102,14 +96,15 @@ def main():
             finally:
                 clear_matrix()
 
+        # TODO: Maybe add delay between distance checks
         # try:
-        #     time.sleep(0.1)
+        #     time.sleep(0.05)
         # except KeyboardInterrupt:
         #     break
 
 def test():
-    # load_model()
-    # get_ocr_reader()  # Initialise OCR reader
+    load_model()
+    get_ocr_reader()  # Initialise OCR reader
 
     input("Camera ready! ")
     trigger_read()
