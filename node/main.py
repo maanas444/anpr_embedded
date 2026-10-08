@@ -9,13 +9,15 @@ from node.ocr_ml import load_model, get_ocr_reader, extract_number_plates
 from node.detection import should_trigger, led_on, led_off
 from node.led_matrix import clear_matrix, show_checkmark, show_cross, scroll_text
 
+from sender import send_data
+
 
 DEBUG_MODE = True
 NODE_ID = 69
 
 cam = Camera()
 
-def _print_timestamp(timestamp_ns):
+def _print_timestamp(timestamp_ns:int):
     seconds = timestamp_ns // 1_000_000_000
     milliseconds = (timestamp_ns % 1_000_000_000) // 1_000_000
     
@@ -24,13 +26,14 @@ def _print_timestamp(timestamp_ns):
     formatted_time = local_dt.strftime(f"%Y/%m/%d %H:%M:%S.{milliseconds:03d}")
     return formatted_time
 
-def number_plate_read(plate_text_raw, timestamp_ns):
+def number_plate_read(plate_text_raw:str, timestamp_ns: int):
     MAX_LENGTH = 10
 
     plate = plate_text_raw[:MAX_LENGTH]
     print(f"[{_print_timestamp(timestamp_ns)}] Number Plate: \"{plate}\" (RAW:\"{plate_text_raw}\")")
 
     # TODO: Trigger DB sender
+    send_data(NODE_ID, plate, timestamp_ns)
 
     # Display number plate
     scroll_text(plate)
