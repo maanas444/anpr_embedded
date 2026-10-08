@@ -208,4 +208,7 @@ def extract_number_plates(frame):
     plates = find_plates(frame)
     if DEBUG_MODE:
         print(f"{len(plates)} plates found! reading (ocr)...")
+
+    if len(plates) == 0:
+        return None  # Early exit: no plates to read
     return read_plates(plates)

@@ -3,7 +3,7 @@ import time
 import datetime
 
 from node.camera import Camera
-from node.ocr_ml import load_model, extract_number_plates
+from node.ocr_ml import load_model, get_ocr_reader, extract_number_plates
 
 
 cam = Camera()
@@ -40,9 +40,12 @@ def trigger_read():
 
 def main():
     load_model()
+    get_ocr_reader()  # Initialise OCR reader
 
 def test():
     load_model()
+    get_ocr_reader()  # Initialise OCR reader
+
     input("Camera ready! ")
     trigger_read()
 
