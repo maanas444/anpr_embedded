@@ -53,13 +53,16 @@ def main():
     load_model()
     get_ocr_reader()  # Initialise OCR reader
 
+    print("Running...")
     while True:
 
         if should_trigger():
+            print("Triggered!")  # TODO: Remove, for debugging
             trigger_read()
+            time.sleep(1)  # Wait before detecting again
 
 
-        time.sleep(0.1)
+        # time.sleep(0.1)
 
 def test():
     load_model()
