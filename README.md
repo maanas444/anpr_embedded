@@ -89,3 +89,4 @@ List DB entries:
 ```
 python3 /var/www/html/database/db_manager.py list
 ```
+***Note:** must be in virtual environment*
