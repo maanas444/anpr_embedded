@@ -12,10 +12,11 @@ from node.led_matrix import clear_matrix, show_checkmark, show_cross, scroll_tex
 from sender import send_data
 
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 NODE_ID = 69
 
 cam = Camera()
+
 
 def _print_timestamp(timestamp_ns:int):
     seconds = timestamp_ns // 1_000_000_000
