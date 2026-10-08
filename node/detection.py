@@ -2,18 +2,24 @@
 
 import time
 import lgpio
+from sense_hat import SenseHat, ACTION_PRESSED  # TODO: Remove, Placeholder
 
-LED_PIN = 2
+sense = SenseHat()
+
+LED_PIN = 17
 TRIGGER_PIN = 5
 
 h = lgpio.gpiochip_open(0)
 lgpio.gpio_claim_output(h, LED_PIN)
-lgpio.gpio_claim_input(h, TRIGGER_PIN, lgpio.SET_PULL_UP)
+# lgpio.gpio_claim_input(h, TRIGGER_PIN, lgpio.SET_PULL_UP)  # TODO: Uncomment
 
 
 def should_trigger():
-    """Real check: True while the trigger pin is touched to GND."""
-    return lgpio.gpio_read(h, TRIGGER_PIN) == 0
+    # """Real check: True while the trigger pin is touched to GND."""
+    # return lgpio.gpio_read(h, TRIGGER_PIN) == 0   # TODO: Uncomment
+
+    # TODO: Remove, Placeholder
+    return sense.stick.wait_for_event().action == ACTION_PRESSED
 
 
 def led_on():
