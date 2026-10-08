@@ -54,6 +54,11 @@ Install packages:
 pip install -e .[server]
 ```
 
+Initialise DB:
+```
+python3 ./server/database/db_manager.py init
+```
+
 Move code into Web directory:
 ```
 cp -r ./server/* /var/www/html
@@ -80,3 +85,6 @@ node
 ```
 
 (Server runs via PHP)
+```
+python3 /var/www/html/database/db_manager.py list
+```
