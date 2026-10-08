@@ -135,21 +135,17 @@ _plate_count = 0
 def process_plate_image(img):
     """
     Preprocess cropped license plate:
-    1. Crop horizontal outer margins (5% | removes 'NEW ZEALAND' logos on side badges).
+    1. Deskew
     2. Resize up for better OCR resolution.
     3. Grayscale + CLAHE for contrast improvement across dark & light plates.
     """
     global _plate_count
 
-    img = deskew_plate(img)  # Rotate
-    h, w = img.shape[:2]
-
-    # Crop off outer 5% left & right sides to ignore side badges/logos
-    margin_x = int(w * 0.05)
-    cropped = img[:, margin_x:w - margin_x]
+    # Rotate
+    img = deskew_plate(img)
 
     # Convert to grayscale
-    gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     # Invert image if background is dark (mean pixel intensity < 128)
     if np.mean(gray) < 128:
