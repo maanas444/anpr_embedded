@@ -7,7 +7,7 @@ from node.camera import Camera
 from node.ocr_ml import load_model, get_ocr_reader, extract_number_plates
 
 from node.detection import should_trigger, led_on, led_off
-from node.led_matrix import show_checkmark, show_cross, scroll_text
+from node.led_matrix import clear_matrix, show_checkmark, show_cross, scroll_text
 
 
 cam = Camera()
@@ -49,9 +49,21 @@ def trigger_read():
     for plate in plates:
         number_plate_read(plate, timestamp_ns)
 
+# TODO: Remove, for debugging
+def show():
+    import cv2
+    while cv2.waitKey(1) != ord('q'):
+        frame = cam.read_frame()
+        if frame is not None:
+            cv2.imshow('cam', frame)
+    cv2.destroyAllWindows()
+
+
 def main():
     load_model()
     get_ocr_reader()  # Initialise OCR reader
+
+    threading.Thread(target=show).start()  # TODO: Remove, for debugging
 
     print("Running...")
     while True:
@@ -59,10 +71,18 @@ def main():
         if should_trigger():
             print("Triggered!")  # TODO: Remove, for debugging
             trigger_read()
-            time.sleep(1)  # Wait before detecting again
+            
+            try:
+                time.sleep(1)  # Wait before detecting again
+            except KeyboardInterrupt:
+                break
+            finally:
+                clear_matrix()
 
-
-        # time.sleep(0.1)
+        # try:
+        #     time.sleep(0.1)
+        # except KeyboardInterrupt:
+        #     break
 
 def test():
     load_model()
