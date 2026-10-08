@@ -27,10 +27,13 @@ def should_trigger():
         sys.exit(0)
 
 
+import datetime
 def led_on():
     # lgpio.gpio_write(h, LED_PIN, 1) # TODO: Uncomment
+    print(f"{datetime.datetime.now()}  On called!")
     sense.clear((255, 255, 255))  # TODO: Remove, placeholder
 def led_off():
+    print(f"{datetime.datetime.now()}  Off called!")
     # lgpio.gpio_write(h, LED_PIN, 0) # TODO: Uncomment
     sense.clear()  # TODO: Remove, placeholder
 
