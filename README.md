@@ -62,6 +62,7 @@ Move code into Web directory:
 ```
 cp -r ./server/* /var/www/html
 ```
+***Note:** may need to use `sudo` for this command.*
 
 Update file permissions:
 ```
