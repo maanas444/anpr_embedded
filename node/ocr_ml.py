@@ -13,7 +13,7 @@ os.environ["YOLO_AUTOINSTALL"] = "False"
 os.environ["ULTRALYTICS_AUTOINSTALL"] = "False"
 from ultralytics import YOLO
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 RESULTS_FOLDER = "../results"
 MODEL_PATH_WITHOUT_EXTENSION = "node/models/license-plate-finetune-v1n"  # Nano : 5.47 MB
 
