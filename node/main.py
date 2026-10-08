@@ -10,6 +10,9 @@ from node.detection import should_trigger, led_on, led_off
 from node.led_matrix import clear_matrix, show_checkmark, show_cross, scroll_text
 
 
+DEBUG_MODE = True
+NODE_ID = 69
+
 cam = Camera()
 
 def _print_timestamp(timestamp_ns):
@@ -39,10 +42,10 @@ def trigger_read():
     led_off()
 
     # TODO: Remove, for debugging
-    import cv2
-    cv2.imwrite("../results/image.jpg", frame)
-    print("Got image - Extracting plates...")
-
+    if DEBUG_MODE:
+        import cv2
+        cv2.imwrite("../results/image.jpg", frame)
+        print("Got image - Extracting plates...")
 
     plates = extract_number_plates(frame)
 
@@ -56,31 +59,34 @@ def trigger_read():
     show_checkmark()
 
 
-# TODO: Remove, for debugging
-def show():
+if DEBUG_MODE:
     import cv2
-    while cv2.waitKey(1) != ord('q'):
-        frame = cam.read_frame()
-        if frame is not None:
-            cv2.imshow('cam', frame)
-    cv2.destroyAllWindows()
-
+    def show():
+        while cv2.waitKey(1) != ord('q'):
+            frame = cam.read_frame()
+            if frame is not None:
+                cv2.imshow(f"Node{NODE_ID} - Cam", frame)
+        cv2.destroyAllWindows()
 
 def main():
     load_model()
     get_ocr_reader()  # Initialise OCR reader
 
-    threading.Thread(target=show).start()  # TODO: Remove, for debugging
+    if DEBUG_MODE:
+        threading.Thread(target=show).start()
 
     print("Running...")
     while True:
 
         if should_trigger():
-            print("Triggered!")  # TODO: Remove, for debugging
-            trigger_read()
+            if DEBUG_MODE:
+                print("Triggered!")
             
+            trigger_read()
+
+            # Wait before detecting again
             try:
-                time.sleep(1.5)  # Wait before detecting again
+                time.sleep(1.5)
             except KeyboardInterrupt:
                 break
             finally:
