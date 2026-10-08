@@ -94,8 +94,9 @@ if __name__ == "__main__":
     sub.add_parser("init", help="Create schema if not present")
 
     write_p = sub.add_parser("write", help="Write a new LP entry")
-    write_p.add_argument("node_name", help="Identifier of the node/LNR unit")
+    write_p.add_argument("node_id", help="Identifier of the node/LNR unit")
     write_p.add_argument("licence_plate", help="Detected licence plate string")
+    write_p.add_argument("timestamp_ns", help="Timestamp")
 
     sub.add_parser("list", help="Print DB contents")
 
@@ -104,6 +105,6 @@ if __name__ == "__main__":
     if args.command == "init":
         init_db()
     elif args.command == "write":
-        write_entry(args.node_name, args.licence_plate)
+        write_entry(args.node_id, args.licence_plate, args.timestamp_ns)
     elif args.command == "list":
         list_entries()
